@@ -1,0 +1,105 @@
+[0m22:29:53.686196 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AC2487BD60>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AC26BF0490>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AC26BF0280>]}
+
+
+============================== 22:29:53.693195 | 1c7ff8f4-cfa5-4634-96d0-838cbed2d59e ==============================
+[0m22:29:53.693195 [info ] [MainThread]: Running with dbt=1.11.0-b3
+[0m22:29:53.694192 [debug] [MainThread]: running dbt with arguments {'log_format': 'default', 'cache_selected_only': 'False', 'target_path': 'None', 'use_colors': 'True', 'profiles_dir': 'C:\\Users\\SHAIYAN ALAM\\.dbt', 'warn_error': 'None', 'static_parser': 'True', 'fail_fast': 'False', 'indirect_selection': 'eager', 'send_anonymous_usage_stats': 'True', 'log_path': 'logs', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'partial_parse': 'True', 'use_experimental_parser': 'False', 'version_check': 'True', 'introspect': 'True', 'quiet': 'False', 'empty': 'None', 'log_cache_events': 'False', 'debug': 'False', 'no_print': 'None', 'invocation_command': 'dbt init flight_analytics_dbt', 'printer_width': '80', 'write_json': 'True'}
+[0m22:29:53.717193 [info ] [MainThread]: Creating dbt configuration folder at C:\Users\SHAIYAN ALAM\.dbt
+[0m22:29:53.721192 [debug] [MainThread]: Starter project path: C:\Users\SHAIYAN ALAM\AppData\Local\Programs\Python\Python310\lib\site-packages\dbt\include\starter_project
+[0m22:29:53.811739 [info ] [MainThread]: 
+Your new dbt project "flight_analytics_dbt" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m22:29:53.812733 [info ] [MainThread]: Setting up your profile.
+[0m22:34:44.236597 [info ] [MainThread]: Profile flight_analytics_dbt written to C:\Users\SHAIYAN ALAM\.dbt\profiles.yml using target's profile_template.yml and your supplied values. Run 'dbt debug' to validate the connection.
+[0m22:34:44.239595 [debug] [MainThread]: Command `dbt init` succeeded at 22:34:44.239595 after 290.65 seconds
+[0m22:34:44.240600 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AC2487BD60>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AC51565480>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AC51564D30>]}
+[0m22:34:44.241600 [debug] [MainThread]: Flushing usage events
+[0m22:34:44.702742 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m22:35:21.965381 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000021449297DC0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002144B628490>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002144B6282E0>]}
+
+
+============================== 22:35:21.972375 | 6aa7fb04-f365-4aa8-887a-a90ac267db5b ==============================
+[0m22:35:21.972375 [info ] [MainThread]: Running with dbt=1.11.0-b3
+[0m22:35:21.973375 [debug] [MainThread]: running dbt with arguments {'target_path': 'None', 'no_print': 'None', 'log_format': 'default', 'use_colors': 'True', 'printer_width': '80', 'warn_error': 'None', 'indirect_selection': 'eager', 'partial_parse': 'True', 'log_path': 'logs', 'send_anonymous_usage_stats': 'True', 'fail_fast': 'False', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'static_parser': 'True', 'use_experimental_parser': 'False', 'version_check': 'True', 'introspect': 'True', 'quiet': 'False', 'empty': 'None', 'log_cache_events': 'False', 'debug': 'False', 'profiles_dir': 'C:\\Users\\SHAIYAN ALAM\\.dbt', 'invocation_command': 'dbt debug', 'cache_selected_only': 'False', 'write_json': 'True'}
+[0m22:35:22.005375 [info ] [MainThread]: dbt version: 1.11.0-b3
+[0m22:35:22.008488 [info ] [MainThread]: python version: 3.10.8
+[0m22:35:22.009469 [info ] [MainThread]: python path: C:\Users\SHAIYAN ALAM\AppData\Local\Programs\Python\Python310\python.exe
+[0m22:35:22.010466 [info ] [MainThread]: os info: Windows-10-10.0.26100-SP0
+[0m22:35:25.770326 [info ] [MainThread]: Using profiles dir at C:\Users\SHAIYAN ALAM\.dbt
+[0m22:35:25.772326 [info ] [MainThread]: Using profiles.yml file at C:\Users\SHAIYAN ALAM\.dbt\profiles.yml
+[0m22:35:25.773324 [info ] [MainThread]: Using dbt_project.yml file at C:\Users\SHAIYAN ALAM\Downloads\FlightAnalytics\dbt_project.yml
+[0m22:35:25.774323 [info ] [MainThread]: adapter type: bigquery
+[0m22:35:25.775322 [info ] [MainThread]: adapter version: 1.10.2
+[0m22:35:25.776322 [info ] [MainThread]: Configuration:
+[0m22:35:25.777322 [info ] [MainThread]:   profiles.yml file [[32mOK found and valid[0m]
+[0m22:35:25.778327 [info ] [MainThread]:   dbt_project.yml file [[31mERROR not found[0m]
+[0m22:35:25.779327 [info ] [MainThread]: Required dependencies:
+[0m22:35:25.780327 [debug] [MainThread]: Executing "git --help"
+[0m22:35:25.836861 [debug] [MainThread]: STDOUT: "b"usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]\n           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]\n           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]\n           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]\n           [--config-env=<name>=<envvar>] <command> [<args>]\n\nThese are common Git commands used in various situations:\n\nstart a working area (see also: git help tutorial)\n   clone     Clone a repository into a new directory\n   init      Create an empty Git repository or reinitialize an existing one\n\nwork on the current change (see also: git help everyday)\n   add       Add file contents to the index\n   mv        Move or rename a file, a directory, or a symlink\n   restore   Restore working tree files\n   rm        Remove files from the working tree and from the index\n\nexamine the history and state (see also: git help revisions)\n   bisect    Use binary search to find the commit that introduced a bug\n   diff      Show changes between commits, commit and working tree, etc\n   grep      Print lines matching a pattern\n   log       Show commit logs\n   show      Show various types of objects\n   status    Show the working tree status\n\ngrow, mark and tweak your common history\n   branch    List, create, or delete branches\n   commit    Record changes to the repository\n   merge     Join two or more development histories together\n   rebase    Reapply commits on top of another base tip\n   reset     Reset current HEAD to the specified state\n   switch    Switch branches\n   tag       Create, list, delete or verify a tag object signed with GPG\n\ncollaborate (see also: git help workflows)\n   fetch     Download objects and refs from another repository\n   pull      Fetch from and integrate with another repository or a local branch\n   push      Update remote refs along with associated objects\n\n'git help -a' and 'git help -g' list available subcommands and some\nconcept guides. See 'git help <command>' or 'git help <concept>'\nto read about a specific subcommand or concept.\nSee 'git help git' for an overview of the system.\n""
+[0m22:35:25.838869 [debug] [MainThread]: STDERR: "b''"
+[0m22:35:25.839857 [info ] [MainThread]:  - git [[32mOK found[0m]
+
+[0m22:35:25.840870 [info ] [MainThread]: Connection:
+[0m22:35:25.841864 [info ] [MainThread]:   method: oauth
+[0m22:35:25.842859 [info ] [MainThread]:   database: flight-analytics-portfolio2001
+[0m22:35:25.843863 [info ] [MainThread]:   execution_project: flight-analytics-portfolio2001
+[0m22:35:25.844856 [info ] [MainThread]:   schema: marts
+[0m22:35:25.845854 [info ] [MainThread]:   location: US
+[0m22:35:25.846857 [info ] [MainThread]:   priority: interactive
+[0m22:35:25.847862 [info ] [MainThread]:   maximum_bytes_billed: None
+[0m22:35:25.848856 [info ] [MainThread]:   impersonate_service_account: None
+[0m22:35:25.849864 [info ] [MainThread]:   job_retry_deadline_seconds: None
+[0m22:35:25.850855 [info ] [MainThread]:   job_retries: 1
+[0m22:35:25.851864 [info ] [MainThread]:   job_creation_timeout_seconds: None
+[0m22:35:25.852868 [info ] [MainThread]:   job_execution_timeout_seconds: 300
+[0m22:35:25.853857 [info ] [MainThread]:   timeout_seconds: 300
+[0m22:35:25.854875 [info ] [MainThread]:   client_id: None
+[0m22:35:25.855855 [info ] [MainThread]:   token_uri: None
+[0m22:35:25.856862 [info ] [MainThread]:   compute_region: None
+[0m22:35:25.856862 [info ] [MainThread]:   dataproc_cluster_name: None
+[0m22:35:25.857864 [info ] [MainThread]:   gcs_bucket: None
+[0m22:35:25.858874 [info ] [MainThread]:   dataproc_batch: None
+[0m22:35:25.860860 [info ] [MainThread]: Registered adapter: bigquery=1.10.2
+[0m22:35:26.478316 [debug] [MainThread]: Acquiring new bigquery connection 'debug'
+[0m22:35:26.479329 [debug] [MainThread]: On debug: select 1 as id
+[0m22:35:26.480368 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m22:35:29.974628 [debug] [MainThread]: BigQuery adapter: https://console.cloud.google.com/bigquery?project=flight-analytics-portfolio2001&j=bq:US:edadcb5a-4e60-4bb8-a9ae-57908902a958&page=queryresults
+[0m22:35:33.417515 [info ] [MainThread]:   Connection test: [[32mOK connection ok[0m]
+
+[0m22:35:33.419512 [info ] [MainThread]: [31m1 check failed:[0m
+[0m22:35:33.420509 [info ] [MainThread]: Project loading failed for the following reason:
+ project path <C:\Users\SHAIYAN ALAM\Downloads\FlightAnalytics\dbt_project.yml> not found
+
+[0m22:35:33.422511 [debug] [MainThread]: Command `dbt debug` failed at 22:35:33.422511 after 11.58 seconds
+[0m22:35:33.423512 [debug] [MainThread]: Connection 'debug' was properly closed.
+[0m22:35:33.424508 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000021449297DC0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000214760316C0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000021476030A00>]}
+[0m22:35:33.424508 [debug] [MainThread]: Flushing usage events
+[0m22:35:33.914098 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m19:06:52.175860 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000214D121BD60>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000214D3590550>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000214D3590370>]}
+
+
+============================== 19:06:52.184964 | 00eb3158-7107-4173-adb1-78a508257ca4 ==============================
+[0m19:06:52.184964 [info ] [MainThread]: Running with dbt=1.11.0-b3
+[0m19:06:52.185972 [debug] [MainThread]: running dbt with arguments {'cache_selected_only': 'False', 'write_json': 'True', 'invocation_command': 'dbt run --select dim_airports+', 'no_print': 'None', 'log_format': 'default', 'warn_error': 'None', 'log_path': 'logs', 'partial_parse': 'True', 'indirect_selection': 'eager', 'send_anonymous_usage_stats': 'True', 'static_parser': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'fail_fast': 'False', 'use_experimental_parser': 'False', 'version_check': 'True', 'introspect': 'True', 'quiet': 'False', 'empty': 'False', 'log_cache_events': 'False', 'debug': 'False', 'profiles_dir': 'C:\\Users\\SHAIYAN ALAM\\.dbt', 'use_colors': 'True', 'printer_width': '80', 'target_path': 'None'}
+[0m19:06:52.186989 [error] [MainThread]: Encountered an error:
+Runtime Error
+  No dbt_project.yml found at expected path C:\Users\SHAIYAN ALAM\Downloads\FlightAnalytics\dbt_project.yml
+  Verify that each entry within packages.yml (and their transitive dependencies) contains a file named dbt_project.yml
+  
+[0m19:06:52.188976 [debug] [MainThread]: Command `dbt run` failed at 19:06:52.188976 after 0.19 seconds
+[0m19:06:52.190042 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000214D121BD60>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000214D3590370>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000214D3590610>]}
+[0m19:06:52.191043 [debug] [MainThread]: Flushing usage events
+[0m19:06:52.699507 [debug] [MainThread]: An error was encountered while trying to flush usage events
