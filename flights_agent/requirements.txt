@@ -1,0 +1,30 @@
+# NL-to-SQL Agent — pinned dependencies
+# Install with: pip install -r requirements.txt
+
+# LangChain orchestration
+langchain==0.3.7
+langchain-anthropic==0.3.3
+langchain-community==0.3.7
+langchain-core==0.3.19
+
+# Claude API (transitive dep of langchain-anthropic, pinned for reproducibility)
+anthropic==0.40.0
+
+# Vector store
+chromadb==0.5.23
+sentence-transformers==3.3.1
+
+# BigQuery
+google-cloud-bigquery==3.27.0
+db-dtypes==1.3.1
+pyarrow==18.1.0
+
+# Data
+pandas==2.2.3
+
+# Frontend
+streamlit==1.40.0
+
+# Utilities
+python-dotenv==1.0.1
+pyyaml==6.0.2
