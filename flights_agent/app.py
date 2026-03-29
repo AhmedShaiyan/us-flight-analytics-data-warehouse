@@ -36,6 +36,14 @@ import agent
 import vectorstore
 
 # ---------------------------------------------------------------------------
+# Session state initialisation
+# ---------------------------------------------------------------------------
+if "query_count" not in st.session_state:
+    st.session_state.query_count = 0
+if "query_log" not in st.session_state:
+    st.session_state.query_log = []  # list of {"question": str, "model": str}
+
+# ---------------------------------------------------------------------------
 # Sidebar
 # ---------------------------------------------------------------------------
 with st.sidebar:
@@ -49,6 +57,20 @@ with st.sidebar:
     )
     llm_mode = "haiku" if llm_choice.startswith("Haiku") else "sonnet"
     os.environ["LLM_MODE"] = llm_mode
+
+    st.divider()
+    st.subheader("Session usage")
+    count = st.session_state.query_count
+    haiku_count = sum(1 for q in st.session_state.query_log if q["model"] == "haiku")
+    sonnet_count = sum(1 for q in st.session_state.query_log if q["model"] == "sonnet")
+    st.metric("Queries this session", count)
+    st.caption(f"Haiku: {haiku_count}   Sonnet: {sonnet_count}")
+    if count >= 20:
+        st.warning("20+ queries this session — consider restarting if costs are a concern.")
+    if count > 0 and st.button("Reset counter", use_container_width=True):
+        st.session_state.query_count = 0
+        st.session_state.query_log = []
+        st.rerun()
 
     st.divider()
     st.subheader("Vector store")
@@ -86,6 +108,9 @@ run_button = st.button("Ask", type="primary")
 if run_button and question.strip():
     with st.spinner("Generating SQL and querying BigQuery…"):
         result = agent.run_query(question.strip(), llm_mode=llm_mode)
+    # Count every attempt (successful or not) so you see real API call volume
+    st.session_state.query_count += 1
+    st.session_state.query_log.append({"question": question.strip(), "model": llm_mode})
 
     error = result.get("error")
     df = result.get("dataframe")

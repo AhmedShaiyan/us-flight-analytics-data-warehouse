@@ -4,8 +4,8 @@ agent.py
 LangChain LCEL orchestration for the NL-to-SQL agent.
 
 Two LCEL sub-chains:
-  sql_chain    : prompt | llm | StrOutputParser()
-  answer_chain : prompt | llm | StrOutputParser()
+  sql_chain    : prompt | sql_llm    | StrOutputParser()   (max_tokens=512)
+  answer_chain : prompt | answer_llm | StrOutputParser()   (max_tokens=256)
 
 Public function:
   run_query(question) -> dict  with keys: sql, dataframe, answer, error
@@ -36,16 +36,20 @@ _HAIKU_MODEL = "claude-haiku-4-5-20251001"
 _SONNET_MODEL = "claude-sonnet-4-6"
 
 
-def _build_llm(mode: Optional[str] = None) -> ChatAnthropic:
-    """Return a ChatAnthropic instance based on LLM_MODE env var."""
+def _build_sql_llm(mode: Optional[str] = None) -> ChatAnthropic:
+    """LLM for SQL generation. 512 tokens is ample for any SQL query."""
     if mode is None:
         mode = os.getenv("LLM_MODE", "haiku").lower()
     model_id = _SONNET_MODEL if mode == "sonnet" else _HAIKU_MODEL
-    return ChatAnthropic(
-        model=model_id,
-        temperature=0,
-        max_tokens=1024,
-    )
+    return ChatAnthropic(model=model_id, temperature=0, max_tokens=512)
+
+
+def _build_answer_llm(mode: Optional[str] = None) -> ChatAnthropic:
+    """LLM for answer synthesis. 256 tokens covers 2-3 sentences comfortably."""
+    if mode is None:
+        mode = os.getenv("LLM_MODE", "haiku").lower()
+    model_id = _SONNET_MODEL if mode == "sonnet" else _HAIKU_MODEL
+    return ChatAnthropic(model=model_id, temperature=0, max_tokens=256)
 
 
 # ---------------------------------------------------------------------------
@@ -61,10 +65,10 @@ def run_query(
 
     Pipeline steps:
         1. Retrieve top-4 schema/example docs from ChromaDB
-        2. Build SQL generation prompt (LCEL: prompt | llm | parser)
+        2. Build SQL generation prompt (LCEL: prompt | sql_llm | parser)
         3. Validate generated SQL
-        4. Execute SQL on BigQuery
-        5. Build answer synthesis prompt (LCEL: prompt | llm | parser)
+        4. Dry-run byte budget check + execute on BigQuery
+        5. Build answer synthesis prompt (LCEL: prompt | answer_llm | parser)
         6. Return structured result dict
 
     Args:
@@ -73,11 +77,11 @@ def run_query(
 
     Returns:
         dict with keys:
-            sql        (str | None)          – validated SQL that was executed
-            dataframe  (pd.DataFrame | None) – query results
-            answer     (str | None)          – plain English summary
-            error      (str | None)          – error message if any step failed
-            row_cap_warning (str | None)     – set if results were truncated
+            sql             (str | None)          – validated SQL that was executed
+            dataframe       (pd.DataFrame | None) – query results
+            answer          (str | None)          – plain English summary
+            error           (str | None)          – error message if any step failed
+            row_cap_warning (str | None)          – set if results were truncated
     """
     result: dict = {
         "sql": None,
@@ -103,9 +107,10 @@ def run_query(
         return result
 
     # ------------------------------------------------------------------
-    # Step 2 — Generate SQL (LCEL chain: prompt | llm | parser)
+    # Step 2 — Generate SQL (LCEL chain: prompt | sql_llm | parser)
     # ------------------------------------------------------------------
-    llm = _build_llm(llm_mode)
+    sql_llm = _build_sql_llm(llm_mode)
+    answer_llm = _build_answer_llm(llm_mode)
     parser = StrOutputParser()
 
     try:
@@ -115,7 +120,7 @@ def run_query(
             project_id=project_id,
             dataset=dataset,
         )
-        sql_chain = sql_prompt | llm | parser
+        sql_chain = sql_prompt | sql_llm | parser
         raw_sql: str = sql_chain.invoke({})
     except Exception as exc:
         result["error"] = f"SQL generation failed ({type(exc).__name__}): {exc}"
@@ -133,11 +138,10 @@ def run_query(
     result["sql"] = validated_sql
 
     # ------------------------------------------------------------------
-    # Step 4 — Execute on BigQuery
+    # Step 4 — Byte budget check + execute on BigQuery
     # ------------------------------------------------------------------
     bq_result = bigquery_runner.run_query(validated_sql)
     if isinstance(bq_result, str):
-        # run_query returned an error string
         result["error"] = bq_result
         return result
 
@@ -146,17 +150,16 @@ def run_query(
     result["row_cap_warning"] = df.attrs.get("row_cap_warning")
 
     # ------------------------------------------------------------------
-    # Step 5 — Synthesise plain English answer (LCEL chain: prompt | llm | parser)
+    # Step 5 — Synthesise plain English answer (LCEL: prompt | answer_llm | parser)
     # ------------------------------------------------------------------
     try:
         answer_prompt = prompt_builder.build_answer_prompt(
             question=question,
             df=df,
         )
-        answer_chain = answer_prompt | llm | parser
+        answer_chain = answer_prompt | answer_llm | parser
         result["answer"] = answer_chain.invoke({})
     except Exception as exc:
-        # Answer synthesis failing is non-fatal — return data without summary
         result["answer"] = None
         result["error"] = f"Answer synthesis failed ({type(exc).__name__}): {exc}"
 
