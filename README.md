@@ -52,7 +52,6 @@ streamlit run app.py
 
 ## Deploying to Cloud Run
 
-Build and push (run from repo root so the Dockerfile can access both `flights_agent/` and `flight_analytics_dbt/`):
 
 ```bash
 gcloud builds submit . --tag REGION-docker.pkg.dev/PROJECT/REPO/IMAGE
@@ -66,7 +65,6 @@ gcloud run deploy flights-agent \
   --max-instances=2
 ```
 
-The vector store is baked into the image at build time, so there is no setup delay on cold starts.
 
 ## Data
 
