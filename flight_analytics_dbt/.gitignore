@@ -2,3 +2,7 @@
 target/
 dbt_packages/
 logs/
+
+# Agent secrets and local vector store
+flights_agent/.env
+flights_agent/chroma_db/

@@ -1,0 +1,36 @@
+# Secrets
+.env
+.env.*
+flights_agent/.env
+flights_agent/.env.*
+**/*.json
+
+# ChromaDB is rebuilt at runtime 
+flights_agent/chroma_db/
+
+# Python bytecode
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+
+
+# dbt compiled output and logs — only models/marts/ is needed 
+flight_analytics_dbt/target/
+flight_analytics_dbt/logs/
+
+# Root-level scripts not needed in the image
+load_flight_data.py
+airport_data.py
+test_flight.py
+README.md
+
+# Git history
+.git/
+.gitignore
+
+# Logs
+logs/
+
+
+**/.DS_Store

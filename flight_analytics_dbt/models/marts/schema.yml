@@ -1,0 +1,299 @@
+version: 2
+
+models:
+  - name: fact_flights
+    description: >
+      Core fact table containing one row per individual operated or cancelled
+      flight leg.  Materialized as a BigQuery table for query performance.
+      All delay columns are coalesced to 0 so aggregations are safe.
+      Join to dim_carrier on carrier_code, dim_airport on origin_airport /
+      dest_airport, and dim_date on flight_date for enriched analysis.
+    columns:
+      - name: flight_date
+        description: >
+          Calendar date of the scheduled departure (DATE).  Primary join key
+          to dim_date.
+      - name: carrier_code
+        description: >
+          IATA two-character operating carrier code.  Foreign key to
+          dim_carrier.carrier_code.
+      - name: flight_number
+        description: >
+          Carrier-assigned numeric flight number.  Together with carrier_code
+          and flight_date it identifies a specific scheduled service.
+      - name: origin_airport
+        description: >
+          Three-letter IATA origin airport code.  Foreign key to
+          dim_airport.airport_code.
+      - name: dest_airport
+        description: >
+          Three-letter IATA destination airport code.  Foreign key to
+          dim_airport.airport_code.
+      - name: origin_city
+        description: City and state string for the departure airport, e.g. "Dallas, TX".
+      - name: dest_city
+        description: City and state string for the arrival airport.
+      - name: scheduled_dep_time
+        description: >
+          Scheduled departure time as an integer in HHMM format (e.g. 830 =
+          08:30, 1545 = 15:45).
+      - name: actual_dep_time
+        description: >
+          Actual departure time in HHMM integer format.  NULL for cancelled
+          flights.
+      - name: scheduled_arr_time
+        description: Scheduled arrival time in HHMM integer format.
+      - name: actual_arr_time
+        description: Actual arrival time in HHMM integer format.  NULL for cancelled flights.
+      - name: dep_delay_minutes
+        description: >
+          Departure delay in minutes.  Negative = early departure.
+          0 when on time or when source value was NULL.
+      - name: arr_delay_minutes
+        description: >
+          Arrival delay in minutes at the destination gate.  Negative = early
+          arrival.  The primary on-time performance metric; flights with
+          arr_delay_minutes <= 15 are considered on-time.
+      - name: air_time_minutes
+        description: Wheels-off to wheels-on flight duration in minutes.
+      - name: actual_elapsed_time_minutes
+        description: Total block time (gate-to-gate) in minutes.
+      - name: is_cancelled
+        description: 1 if the flight was cancelled before departure, 0 otherwise.
+      - name: is_diverted
+        description: 1 if the flight landed at an unplanned alternate airport, 0 otherwise.
+      - name: cancellation_code
+        description: >
+          BTS cancellation reason: A = Carrier, B = Weather,
+          C = National Air System, D = Security.  NULL for operated flights.
+      - name: carrier_delay_minutes
+        description: >
+          Portion of arrival delay (minutes) attributed to the airline
+          (crew, maintenance, fuelling, etc.).
+      - name: weather_delay_minutes
+        description: >
+          Portion of arrival delay (minutes) caused by adverse meteorological
+          conditions at origin, destination, or en route.
+      - name: nas_delay_minutes
+        description: >
+          Portion of arrival delay (minutes) attributable to the National
+          Aviation System — air traffic control, high traffic volume, or
+          non-extreme weather conditions.
+      - name: security_delay_minutes
+        description: >
+          Portion of arrival delay (minutes) caused by security-related
+          incidents such as evacuation, re-boarding, or security equipment
+          failure.
+      - name: late_aircraft_delay_minutes
+        description: >
+          Portion of arrival delay (minutes) caused by the inbound aircraft
+          arriving late on a prior flight leg.
+      - name: is_ontime
+        description: >
+          1 when the flight operated and arrived within 15 minutes of
+          schedule (arr_delay_minutes <= 15), 0 otherwise.  Cancelled
+          flights always return 0.
+
+  - name: dim_carrier
+    description: >
+      Carrier dimension table mapping IATA two-character codes to full airline
+      names.  Derived directly from the distinct carriers present in the raw
+      flight data.  One row per carrier.
+    columns:
+      - name: carrier_code
+        description: >
+          IATA two-character operating carrier code, e.g. "AA", "DL", "WN".
+          Primary key of this dimension.
+      - name: carrier_name
+        description: >
+          Full commercial name of the airline, e.g. "American Airlines",
+          "Delta Air Lines", "Southwest Airlines".  Carriers not in the lookup
+          are labelled "Others".
+
+  - name: dim_date
+    description: >
+      Date dimension table derived from the distinct flight dates present in
+      the raw data.  Provides calendar attributes for time-series analysis.
+      One row per calendar date.
+    columns:
+      - name: date_day
+        description: The calendar date (DATE).  Primary key of this dimension.
+      - name: year
+        description: Four-digit calendar year extracted from date_day.
+      - name: quarter
+        description: Calendar quarter (1–4) extracted from date_day.
+      - name: month
+        description: Calendar month number (1–12) extracted from date_day.
+      - name: day_of_month
+        description: Day of the month (1–31) extracted from date_day.
+      - name: day_of_week
+        description: >
+          Day of the week as an integer (1 = Sunday, 7 = Saturday) following
+          BigQuery's EXTRACT(DAYOFWEEK) convention.
+      - name: day_name
+        description: Full name of the weekday, e.g. "Monday", "Friday".
+      - name: month_name
+        description: Full name of the month, e.g. "January", "December".
+      - name: is_weekend
+        description: >
+          1 when the date falls on a Saturday or Sunday, 0 for weekdays.
+          Useful for segmenting leisure vs. business travel patterns.
+
+  - name: dim_airport
+    description: >
+      Airport dimension combining the Kaggle airport reference dataset with
+      any origin/destination airports present in flight data that were missing
+      from the reference.  One row per IATA airport code.
+    columns:
+      - name: airport_code
+        description: >
+          Three-letter IATA airport code, e.g. "JFK", "LAX", "ORD".
+          Primary key of this dimension.
+      - name: airport_name
+        description: Full name of the airport, e.g. "John F Kennedy Intl".
+      - name: city
+        description: City where the airport is located, e.g. "New York".
+      - name: state
+        description: >
+          Two-letter US state abbreviation where the airport is located,
+          e.g. "NY", "CA".  NULL for airports derived from flight data
+          without state information.
+      - name: country
+        description: Country code.  All rows in this dataset are "USA".
+      - name: latitude
+        description: >
+          Decimal latitude of the airport.  NULL for airports that were
+          inferred from flight data rather than sourced from the reference
+          file.
+      - name: longitude
+        description: >
+          Decimal longitude of the airport.  NULL for airports inferred
+          from flight data rather than sourced from the reference file.
+
+  - name: flight_analysis
+    description: >
+      Fully denormalised analysis view joining fact_flights with all four
+      dimension tables (dim_carrier, dim_airport for both origin and
+      destination, dim_date).  Materialised as a BigQuery VIEW so it always
+      reflects the latest underlying table data.  This is the primary table
+      recommended for ad-hoc analytical queries and the NL-to-SQL agent.
+      One row per flight leg.
+    columns:
+      - name: flight_date
+        description: Calendar date of the scheduled departure.
+      - name: flight_number
+        description: Carrier-assigned numeric flight number.
+      - name: carrier_name
+        description: Full airline name, e.g. "Southwest Airlines".
+      - name: carrier_code
+        description: IATA two-character carrier code.
+      - name: origin_code
+        description: Three-letter IATA code for the departure airport.
+      - name: origin_airport_name
+        description: Full name of the departure airport.
+      - name: origin_city
+        description: City of the departure airport.
+      - name: origin_state
+        description: US state of the departure airport.
+      - name: origin_lat
+        description: Decimal latitude of the departure airport.
+      - name: origin_lon
+        description: Decimal longitude of the departure airport.
+      - name: dest_code
+        description: Three-letter IATA code for the arrival airport.
+      - name: dest_airport_name
+        description: Full name of the arrival airport.
+      - name: dest_city
+        description: City of the arrival airport.
+      - name: dest_state
+        description: US state of the arrival airport.
+      - name: dest_lat
+        description: Decimal latitude of the arrival airport.
+      - name: dest_lon
+        description: Decimal longitude of the arrival airport.
+      - name: day_name
+        description: Full weekday name of the flight date, e.g. "Tuesday".
+      - name: month_name
+        description: Full month name of the flight date, e.g. "January".
+      - name: is_weekend
+        description: 1 if the flight date falls on Saturday or Sunday, 0 otherwise.
+      - name: quarter
+        description: Calendar quarter (1–4) of the flight date.
+      - name: scheduled_dep_time_formatted
+        description: >
+          Scheduled departure time formatted as "HH:MM" string, e.g.
+          "14:30".  Derived from the integer HHMM field.
+      - name: actual_dep_time_formatted
+        description: Actual departure time as "HH:MM" string.  NULL for cancelled flights.
+      - name: scheduled_arr_time_formatted
+        description: Scheduled arrival time as "HH:MM" string.
+      - name: actual_arr_time_formatted
+        description: Actual arrival time as "HH:MM" string.  NULL for cancelled flights.
+      - name: scheduled_dep_time
+        description: Scheduled departure time as integer in HHMM format.
+      - name: actual_dep_time
+        description: Actual departure time as integer in HHMM format.
+      - name: scheduled_arr_time
+        description: Scheduled arrival time as integer in HHMM format.
+      - name: actual_arr_time
+        description: Actual arrival time as integer in HHMM format.
+      - name: dep_delay_minutes
+        description: Departure delay in minutes.  Negative = early departure.
+      - name: arr_delay_minutes
+        description: >
+          Arrival delay in minutes.  Negative = early arrival.  Threshold
+          for on-time is <= 15 minutes.
+      - name: air_time_minutes
+        description: Wheels-off to wheels-on flight time in minutes.
+      - name: actual_elapsed_time_minutes
+        description: Total gate-to-gate block time in minutes.
+      - name: carrier_delay_minutes
+        description: Arrival delay minutes attributed to the carrier.
+      - name: weather_delay_minutes
+        description: Arrival delay minutes attributed to weather.
+      - name: nas_delay_minutes
+        description: Arrival delay minutes attributed to the National Aviation System.
+      - name: security_delay_minutes
+        description: Arrival delay minutes attributed to security incidents.
+      - name: late_aircraft_delay_minutes
+        description: Arrival delay minutes caused by a late inbound aircraft.
+      - name: is_cancelled
+        description: 1 if the flight was cancelled, 0 otherwise.
+      - name: is_diverted
+        description: 1 if the flight was diverted, 0 otherwise.
+      - name: cancellation_code
+        description: BTS cancellation reason code (A/B/C/D).  NULL for operated flights.
+      - name: is_ontime
+        description: 1 if arr_delay_minutes <= 15 and flight was not cancelled, 0 otherwise.
+      - name: delay_category
+        description: >
+          Human-readable delay bucket: "Cancelled", "Diverted", "Unknown",
+          "Early", "On-Time (0-15 min)", "Delayed (15-60 min)", or
+          "Severely Delayed (60+ min)".
+      - name: route_name
+        description: >
+          Readable route label in "Origin City → Destination City" format,
+          e.g. "New York → Los Angeles".
+      - name: route_code
+        description: >
+          Compact route identifier in "ORIGIN-DEST" format, e.g. "JFK-LAX".
+          Useful for grouping all flights on a specific route.
+
+  - name: delay_breakdown
+    description: >
+      Pre-aggregated table showing total delay minutes broken down by airline
+      and delay type.  Materialized as a BigQuery table.  Each row represents
+      one (carrier_name, delay_type) combination.  Delay types are: Carrier
+      Delay, Weather Delay, NAS Delay, Security Delay, Late Aircraft Delay.
+      Use this table for delay attribution analysis and carrier comparisons.
+    columns:
+      - name: carrier_name
+        description: Full airline name, e.g. "Delta Air Lines".
+      - name: delay_type
+        description: >
+          Category of delay: "Carrier Delay", "Weather Delay", "NAS Delay",
+          "Security Delay", or "Late Aircraft Delay".
+      - name: delay_minutes
+        description: >
+          Total accumulated minutes of this delay type for this carrier
+          across all flights in the dataset.

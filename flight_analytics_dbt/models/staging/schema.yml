@@ -1,0 +1,112 @@
+version: 2
+
+models:
+  - name: stg_flights
+    description: >
+      Cleaned and standardised staging view built directly from the raw BTS flights
+      table.  One row per individual scheduled flight leg.  Null delay/cancellation
+      fields from the source are coalesced to 0 so downstream aggregations never
+      produce unexpected NULLs.
+    columns:
+      - name: flight_timestamp
+        description: >
+          Full departure date and time parsed from the raw FL_DATE string
+          (format MM/DD/YYYY HH:MM:SS AM/PM).  Stored as TIMESTAMP.
+      - name: flight_date
+        description: >
+          Calendar date of the scheduled departure, cast to DATE.  Use this
+          field for day-level analysis and joins to the date dimension.
+      - name: carrier_code
+        description: >
+          IATA two-character operating carrier code, e.g. "AA" for American
+          Airlines, "DL" for Delta.  Matches carrier_code in dim_carrier.
+      - name: flight_number
+        description: >
+          Numeric flight number assigned by the operating carrier.  Combined
+          with carrier_code it uniquely identifies a scheduled service on a
+          given date.
+      - name: origin_airport
+        description: >
+          Three-letter IATA code of the departure airport, e.g. "JFK", "LAX".
+          Matches airport_code in dim_airport.
+      - name: origin_city
+        description: >
+          Human-readable city and state string for the origin airport,
+          e.g. "New York, NY".
+      - name: dest_airport
+        description: >
+          Three-letter IATA code of the arrival airport.
+          Matches airport_code in dim_airport.
+      - name: dest_city
+        description: >
+          Human-readable city and state string for the destination airport.
+      - name: scheduled_dep_time
+        description: >
+          Scheduled departure time as an integer in HHMM format, e.g. 1430
+          represents 2:30 PM local time.  Divide by 100 and take the modulo
+          to recover hours and minutes.
+      - name: actual_dep_time
+        description: >
+          Actual wheels-off departure time in HHMM integer format.  NULL when
+          the flight was cancelled before departure.
+      - name: scheduled_arr_time
+        description: >
+          Scheduled arrival time at the destination in HHMM integer format.
+      - name: actual_arr_time
+        description: >
+          Actual gate-arrival time at the destination in HHMM integer format.
+          NULL for cancelled flights.
+      - name: dep_delay_minutes
+        description: >
+          Departure delay in minutes.  Negative values indicate an early
+          departure.  Zero when the flight left on time or the value was NULL
+          in the source (coalesced).
+      - name: arr_delay_minutes
+        description: >
+          Arrival delay in minutes at the destination gate.  Negative values
+          mean the flight arrived early.  The primary metric for on-time
+          performance; a flight is considered on-time when arr_delay_minutes
+          <= 15.
+      - name: is_cancelled
+        description: >
+          Flag indicating whether the flight was cancelled (1) or operated
+          (0).  Cast from the source CANCELLED float to INT64.
+      - name: is_diverted
+        description: >
+          Flag indicating whether the flight landed at an unplanned alternate
+          airport (1) or its scheduled destination (0).
+      - name: cancellation_code
+        description: >
+          BTS reason code for a cancellation: A = Carrier, B = Weather,
+          C = National Air System, D = Security.  NULL for operated flights.
+      - name: actual_elapsed_time_minutes
+        description: >
+          Total block time from gate departure to gate arrival in minutes,
+          as recorded by the carrier.
+      - name: air_time_minutes
+        description: >
+          Wheels-off to wheels-on flight time in minutes, excluding taxi time
+          at both ends.
+      - name: carrier_delay_minutes
+        description: >
+          Minutes of arrival delay attributed to the carrier (maintenance,
+          crew, aircraft cleaning, baggage loading, etc.).  0 when not
+          applicable or NULL in source.
+      - name: weather_delay_minutes
+        description: >
+          Minutes of arrival delay caused by significant meteorological
+          conditions.  0 when not applicable.
+      - name: nas_delay_minutes
+        description: >
+          Minutes of arrival delay caused by the National Aviation System
+          (heavy traffic volume, ATC, non-extreme weather).  0 when not
+          applicable.
+      - name: security_delay_minutes
+        description: >
+          Minutes of delay caused by security-related issues such as
+          evacuation, re-boarding, or inoperative screening equipment.
+          0 when not applicable.
+      - name: late_aircraft_delay_minutes
+        description: >
+          Minutes of arrival delay caused by a previous flight using the
+          same aircraft arriving late.  0 when not applicable.

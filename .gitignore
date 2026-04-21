@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+venv/
+.venv/
+
+# Secrets
+.env
+.env.*
+
+# ChromaDB — rebuilt at runtime
+flights_agent/chroma_db/
+
+# dbt
+flight_analytics_dbt/target/
+flight_analytics_dbt/logs/
+dbt.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+airport_data.py
+load_flight_data.py
+test_flight.py
