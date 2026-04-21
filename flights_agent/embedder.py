@@ -1,23 +1,7 @@
-"""
-embedder.py
------------
-Converts TableSchema objects into ChromaDB-ready document dicts and appends
-10 domain-specific example question/SQL pairs that improve retrieval for
-common analytical questions about US domestic flights.
-
-One ChromaDB document per table schema + one document per example Q&A pair.
-"""
-
 from __future__ import annotations
 
 from schema_loader import TableSchema
 
-
-# ---------------------------------------------------------------------------
-# Example Q&A pairs (used as additional retrieval anchors)
-# Each pair is embedded so that similar user questions retrieve relevant SQL
-# patterns even before a table-schema doc is retrieved.
-# ---------------------------------------------------------------------------
 
 def _example_qa_pairs(project_id: str, dataset: str) -> list[dict]:
     p = f"`{project_id}.{dataset}"
@@ -176,32 +160,14 @@ def _example_qa_pairs(project_id: str, dataset: str) -> list[dict]:
     ]
 
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
-
 def build_documents(
     schemas: list[TableSchema],
     project_id: str,
     dataset: str,
 ) -> list[dict]:
-    """
-    Convert a list of TableSchema objects into a flat list of ChromaDB
-    document dicts (one per table) and append 10 example Q&A documents.
-
-    Args:
-        schemas:    Output of schema_loader.load_mart_schemas().
-        project_id: GCP project ID, e.g. 'flight-analytics-portfolio2001'.
-        dataset:    BigQuery dataset name, e.g. 'marts'.
-
-    Returns:
-        List of dicts with keys: id, text, metadata.
-    """
+    """Convert TableSchema objects into ChromaDB document dicts and append example Q&A pairs."""
     docs: list[dict] = []
-
     for schema in schemas:
         docs.append(schema.to_document(project_id=project_id, dataset=dataset))
-
     docs.extend(_example_qa_pairs(project_id=project_id, dataset=dataset))
-
     return docs

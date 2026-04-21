@@ -1,15 +1,3 @@
-"""
-schema_loader.py
-----------------
-Reads dbt .sql model files from models/marts/ and the accompanying schema.yml
-files, then produces a list of structured TableSchema documents ready to be
-embedded into ChromaDB.
-
-Column descriptions come from schema.yml where available; for any column not
-covered there, a description is generated automatically from the column name
-using the flights domain context dictionary below.
-"""
-
 from __future__ import annotations
 
 import re
@@ -20,9 +8,7 @@ from typing import Optional
 import yaml
 
 
-# ---------------------------------------------------------------------------
 # Data structures
-# ---------------------------------------------------------------------------
 
 @dataclass
 class ColumnInfo:
@@ -59,9 +45,7 @@ class TableSchema:
         }
 
 
-# ---------------------------------------------------------------------------
 # Domain-aware description generator for unmapped columns
-# ---------------------------------------------------------------------------
 
 _COLUMN_DESCRIPTIONS: dict[str, str] = {
     # fact_flights / stg_flights
@@ -167,9 +151,7 @@ def _describe_column(col_name: str) -> str:
     return col_name.replace("_", " ").capitalize() + "."
 
 
-# ---------------------------------------------------------------------------
 # SQL parsing helpers
-# ---------------------------------------------------------------------------
 
 def _strip_comments(sql: str) -> str:
     sql = re.sub(r"--[^\n]*", "", sql)
@@ -215,9 +197,7 @@ def _extract_columns_from_sql(sql: str) -> list[str]:
     return [c for c in columns if c]
 
 
-# ---------------------------------------------------------------------------
 # YAML description loader
-# ---------------------------------------------------------------------------
 
 def _load_yaml_descriptions(yaml_path: Path) -> dict[str, dict[str, str]]:
     """
@@ -246,27 +226,18 @@ def _load_yaml_descriptions(yaml_path: Path) -> dict[str, dict[str, str]]:
     return result
 
 
-# ---------------------------------------------------------------------------
 # Public API
-# ---------------------------------------------------------------------------
 
 def load_mart_schemas(
     models_dir: Optional[Path] = None,
     project_id: str = "",
     dataset: str = "",
 ) -> list[TableSchema]:
-    """
-    Parse all .sql files under models/marts/ and return a list of TableSchema
-    objects enriched with column descriptions from schema.yml.
-
-    Args:
-        models_dir: Path to the dbt models/ directory.  Defaults to
-                    ../../flight_analytics_dbt/models relative to this file.
-        project_id:  GCP project ID (used only for document text generation).
-        dataset:     BigQuery dataset name.
-    """
     if models_dir is None:
-        models_dir = Path(__file__).parent.parent / "flight_analytics_dbt" / "models"
+        # Docker: schema_loader.py is at /app/ and dbt models are at /app/flight_analytics_dbt/
+        # Local:  schema_loader.py is at flights_agent/ and dbt models are one level up
+        same_level = Path(__file__).parent / "flight_analytics_dbt" / "models"
+        models_dir = same_level if same_level.exists() else Path(__file__).parent.parent / "flight_analytics_dbt" / "models"
 
     marts_dir = models_dir / "marts"
 

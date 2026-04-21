@@ -1,11 +1,3 @@
-"""
-prompt_builder.py
------------------
-Builds LangChain ChatPromptTemplate objects for:
-  1. SQL generation  – system prompt with schema context + few-shot examples
-  2. Answer synthesis – summarisation prompt that turns a DataFrame into prose
-"""
-
 from __future__ import annotations
 
 import os
@@ -13,9 +5,7 @@ import os
 import pandas as pd
 from langchain_core.prompts import ChatPromptTemplate
 
-# ---------------------------------------------------------------------------
-# Few-shot examples (derived from the actual schema)
-# ---------------------------------------------------------------------------
+
 
 _FEW_SHOT_EXAMPLES = """
 --- Example 1 ---
@@ -55,11 +45,35 @@ GROUP BY route_code, route_name
 HAVING total_flights >= 50
 ORDER BY cancel_pct DESC
 LIMIT 100
+
+--- Example 4 ---
+Question: How many flights arrived and departed at ORD each day in January?
+SQL:
+WITH departures AS (
+  SELECT flight_date,
+         COUNT(*) AS departing_flights
+  FROM `{project_id}.{dataset}.flight_analysis`
+  WHERE origin_code = 'ORD'
+    AND month_name = 'January'
+  GROUP BY flight_date
+),
+arrivals AS (
+  SELECT flight_date,
+         COUNT(*) AS arriving_flights
+  FROM `{project_id}.{dataset}.flight_analysis`
+  WHERE dest_code = 'ORD'
+    AND month_name = 'January'
+  GROUP BY flight_date
+)
+SELECT d.flight_date,
+       d.departing_flights,
+       a.arriving_flights
+FROM departures d
+JOIN arrivals a USING (flight_date)
+ORDER BY flight_date
+LIMIT 100
 """
 
-# ---------------------------------------------------------------------------
-# SQL generation prompt
-# ---------------------------------------------------------------------------
 
 _SQL_SYSTEM_TEMPLATE = """\
 You are an expert BigQuery SQL analyst for a US domestic flights data warehouse.
@@ -94,13 +108,6 @@ def build_sql_prompt(
     project_id: str = "",
     dataset: str = "",
 ) -> ChatPromptTemplate:
-    """
-    Return a ChatPromptTemplate for SQL generation, populated with the
-    retrieved schema context docs and the user question.
-
-    The prompt is partially formatted so that .invoke({}) works with no
-    additional variables.
-    """
     if not project_id:
         project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "your-gcp-project")
     if not dataset:
@@ -122,9 +129,6 @@ def build_sql_prompt(
     ])
 
 
-# ---------------------------------------------------------------------------
-# Answer synthesis prompt
-# ---------------------------------------------------------------------------
 
 _ANSWER_SYSTEM_TEMPLATE = """\
 You are a helpful data analyst explaining BigQuery query results about US
@@ -149,12 +153,6 @@ def build_answer_prompt(
     question: str,
     df: pd.DataFrame,
 ) -> ChatPromptTemplate:
-    """
-    Return a ChatPromptTemplate for the answer synthesis call.
-
-    Uses the first 20 rows of the DataFrame as the data preview to keep the
-    prompt compact while still giving the LLM enough context.
-    """
     preview_rows = min(20, len(df))
     data_preview = df.head(preview_rows).to_string(index=False)
     row_count = len(df)

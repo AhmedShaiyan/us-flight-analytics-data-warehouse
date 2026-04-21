@@ -5,14 +5,16 @@
 langchain==0.3.7
 langchain-anthropic==0.3.3
 langchain-community==0.3.7
-langchain-core==0.3.19
+# langchain-core: intentionally unpinned — version is resolved by langchain + langchain-anthropic
 
-# Claude API (transitive dep of langchain-anthropic, pinned for reproducibility)
-anthropic==0.40.0
+# Claude API: intentionally unpinned — version is resolved by langchain-anthropic
+# (langchain-anthropic 0.3.3 requires anthropic>=0.41.0,<1)
 
 # Vector store
 chromadb==0.5.23
 sentence-transformers==3.3.1
+onnxruntime==1.17.1
+# torch is installed separately in Dockerfile (CPU-only build) to prevent GPU version being pulled in
 
 # BigQuery
 google-cloud-bigquery==3.27.0
@@ -24,7 +26,9 @@ pandas==2.2.3
 
 # Frontend
 streamlit==1.40.0
+plotly==5.24.1
 
 # Utilities
 python-dotenv==1.0.1
 pyyaml==6.0.2
+google-cloud-secret-manager

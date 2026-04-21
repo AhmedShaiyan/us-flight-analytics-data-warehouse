@@ -1,15 +1,4 @@
-"""
-setup_vectorstore.py
---------------------
-One-time (idempotent) script to embed schema documents and example Q&A pairs
-into the local ChromaDB vector store.
 
-Run this once before starting the Streamlit app:
-    cd flights_agent
-    python setup_vectorstore.py
-
-Safe to re-run: upsert semantics ensure no duplicate documents are created.
-"""
 
 from __future__ import annotations
 
@@ -17,7 +6,6 @@ import os
 import sys
 from pathlib import Path
 
-# Ensure sibling modules are importable when run directly
 sys.path.insert(0, str(Path(__file__).parent))
 
 from dotenv import load_dotenv
@@ -47,9 +35,6 @@ def main() -> None:
     print(f"  BQ Dataset  : {dataset}")
     print()
 
-    # ------------------------------------------------------------------
-    # 1. Load schema from dbt SQL + YAML files
-    # ------------------------------------------------------------------
     print("Step 1/3  Loading mart schemas from dbt models…")
     models_dir = Path(__file__).parent.parent / "flight_analytics_dbt" / "models"
     schemas = schema_loader.load_mart_schemas(
@@ -62,9 +47,6 @@ def main() -> None:
         print(f"            • {s.table_name}  ({len(s.columns)} columns)")
     print()
 
-    # ------------------------------------------------------------------
-    # 2. Build ChromaDB documents
-    # ------------------------------------------------------------------
     print("Step 2/3  Building documents (schema + example Q&A pairs)…")
     docs = embedder.build_documents(
         schemas=schemas,
@@ -78,9 +60,6 @@ def main() -> None:
     print(f"          {len(docs)} total documents to embed")
     print()
 
-    # ------------------------------------------------------------------
-    # 3. Embed and persist into ChromaDB
-    # ------------------------------------------------------------------
     print("Step 3/3  Embedding documents into ChromaDB…")
     print("          (downloading all-MiniLM-L6-v2 on first run — this may take a minute)")
     vectorstore.add_documents(docs)

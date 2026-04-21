@@ -1,16 +1,3 @@
-"""
-agent.py
---------
-LangChain LCEL orchestration for the NL-to-SQL agent.
-
-Two LCEL sub-chains:
-  sql_chain    : prompt | sql_llm    | StrOutputParser()   (max_tokens=512)
-  answer_chain : prompt | answer_llm | StrOutputParser()   (max_tokens=256)
-
-Public function:
-  run_query(question) -> dict  with keys: sql, dataframe, answer, error
-"""
-
 from __future__ import annotations
 
 import os
@@ -28,10 +15,7 @@ import vectorstore
 
 load_dotenv()
 
-# ---------------------------------------------------------------------------
 # LLM factory
-# ---------------------------------------------------------------------------
-
 _HAIKU_MODEL = "claude-haiku-4-5-20251001"
 _SONNET_MODEL = "claude-sonnet-4-6"
 
@@ -51,38 +35,13 @@ def _build_answer_llm(mode: Optional[str] = None) -> ChatAnthropic:
     model_id = _SONNET_MODEL if mode == "sonnet" else _HAIKU_MODEL
     return ChatAnthropic(model=model_id, temperature=0, max_tokens=256)
 
-
-# ---------------------------------------------------------------------------
 # Core orchestration
-# ---------------------------------------------------------------------------
 
 def run_query(
     question: str,
     llm_mode: Optional[str] = None,
 ) -> dict:
-    """
-    Run the full NL-to-SQL pipeline for *question*.
-
-    Pipeline steps:
-        1. Retrieve top-4 schema/example docs from ChromaDB
-        2. Build SQL generation prompt (LCEL: prompt | sql_llm | parser)
-        3. Validate generated SQL
-        4. Dry-run byte budget check + execute on BigQuery
-        5. Build answer synthesis prompt (LCEL: prompt | answer_llm | parser)
-        6. Return structured result dict
-
-    Args:
-        question:  Natural language question from the user.
-        llm_mode:  "haiku" or "sonnet".  Falls back to LLM_MODE env var.
-
-    Returns:
-        dict with keys:
-            sql             (str | None)          – validated SQL that was executed
-            dataframe       (pd.DataFrame | None) – query results
-            answer          (str | None)          – plain English summary
-            error           (str | None)          – error message if any step failed
-            row_cap_warning (str | None)          – set if results were truncated
-    """
+    """Run the full NL-to-SQL pipeline. Returns dict with keys: sql, dataframe, answer, error, row_cap_warning."""
     result: dict = {
         "sql": None,
         "dataframe": None,
@@ -94,9 +53,8 @@ def run_query(
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "")
     dataset = os.getenv("BQ_DATASET", "marts")
 
-    # ------------------------------------------------------------------
-    # Step 1 — Retrieve relevant schema context from ChromaDB
-    # ------------------------------------------------------------------
+
+  
     try:
         context_docs = vectorstore.retrieve(question, n_results=4)
     except Exception as exc:
@@ -106,9 +64,7 @@ def run_query(
         )
         return result
 
-    # ------------------------------------------------------------------
-    # Step 2 — Generate SQL (LCEL chain: prompt | sql_llm | parser)
-    # ------------------------------------------------------------------
+
     sql_llm = _build_sql_llm(llm_mode)
     answer_llm = _build_answer_llm(llm_mode)
     parser = StrOutputParser()
@@ -124,11 +80,10 @@ def run_query(
         raw_sql: str = sql_chain.invoke({})
     except Exception as exc:
         result["error"] = f"SQL generation failed ({type(exc).__name__}): {exc}"
+        print(f"[agent] ERROR: {result['error']}", flush=True)
         return result
 
-    # ------------------------------------------------------------------
-    # Step 3 — Validate SQL
-    # ------------------------------------------------------------------
+
     validated_sql = sql_validator.validate(raw_sql)
     if validated_sql.startswith("ERROR:"):
         result["sql"] = raw_sql
@@ -137,9 +92,7 @@ def run_query(
 
     result["sql"] = validated_sql
 
-    # ------------------------------------------------------------------
-    # Step 4 — Byte budget check + execute on BigQuery
-    # ------------------------------------------------------------------
+
     bq_result = bigquery_runner.run_query(validated_sql)
     if isinstance(bq_result, str):
         result["error"] = bq_result
@@ -149,9 +102,7 @@ def run_query(
     result["dataframe"] = df
     result["row_cap_warning"] = df.attrs.get("row_cap_warning")
 
-    # ------------------------------------------------------------------
-    # Step 5 — Synthesise plain English answer (LCEL: prompt | answer_llm | parser)
-    # ------------------------------------------------------------------
+
     try:
         answer_prompt = prompt_builder.build_answer_prompt(
             question=question,
